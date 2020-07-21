@@ -23,11 +23,11 @@ topk = 5
 
 # Set up parameters for entry in command line
 parser = argparse.ArgumentParser()
-parser.add_argument('-c','--checkpoint', action='store',type=str, help='Name of trained model to be loaded and used for predictions.')
-parser.add_argument('-i','--image_path',action='store',type=str, help='Location of image to predict e.g. flowers/test/class/image')
-parser.add_argument('-k', '--topk', action='store',type=int, help='Select number of classes you wish to see in descending order.')
-parser.add_argument('-j', '--json', action='store',type=str, help='Define name of json file holding class names.')
-parser.add_argument('-g','--gpu', action='store_true', help='Use GPU if available')
+parser.add_argument('-c', '--checkpoint', action='store', type=str, help='Name of trained model to be loaded and used for predictions.', required=True)
+parser.add_argument('-i', '--image_path', action='store', type=str, help='Location of image to predict e.g. flowers/test/class/image', required=True)
+parser.add_argument('-k', '--topk', action='store', type=int, help='Select number of classes you wish to see in descending order.')
+parser.add_argument('-j', '--json', action='store', type=str, help='Define name of json file holding class names.')
+parser.add_argument('-g', '--gpu', action='store_true', help='Use GPU if available')
 
 args = parser.parse_args()
 

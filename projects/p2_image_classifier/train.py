@@ -13,22 +13,17 @@ from os import listdir
 import time
 import copy
 import argparse
-
-# Initiate variables with default values
-arch = 'vgg19'
-hidden_units = 5120
-learning_rate = 0.001
-epochs = 10
-device = 'cpu'
+import sys
 
 # Set up parameters for entry in command line
 parser = argparse.ArgumentParser()
-parser.add_argument('data_dir', type=str)
-parser.add_argument('-a','--arch', action='store', type=str)
-parser.add_argument('-H','--hidden_units', action='store', type=int)
-parser.add_argument('-l','--learning_rate', action='store', type=float)
-parser.add_argument('-e','--epochs', action='store', type=int)
-parser.add_argument('-g','--gpu', action='store_true')
+parser.add_argument('data_dir', type=str, help='Location of directory with data for image classifier to train and test')
+parser.add_argument('-a','--arch', action='store', type=str, help='Choose among 3 pretrained networks - vgg19, alexnet, and densenet121', default='vgg19')
+parser.add_argument('-H','--hidden_units', action='store', type=int, help='Select number of hidden units for 1st layer', default=5120)
+parser.add_argument('-l','--learning_rate', action='store', type=float, help='Choose a float number as the learning rate for the model', default=0.001)
+parser.add_argument('-e','--epochs', action='store', type=int, help='Choose the number of epochs you want to perform gradient descent', default=1)
+parser.add_argument('-s','--save_dir', action='store', type=str, help='Select name of file to save the trained model', default="./checkpoint.pth")
+parser.add_argument('-g','--gpu', action='store_true', help='Use GPU if available', default="gpu")
 
 args = parser.parse_args()
 
@@ -44,13 +39,29 @@ if args.epochs:
 if args.gpu:        
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def create_model(arch='vgg19',hidden_units=5120,learning_rate=0.001):
+def create_model(arch=arch,hidden_units=hidden_units,learning_rate=learning_rate):
     '''
     Function builds model
     '''
     # Select from available pretrained models
-    model = getattr(models,arch)(pretrained=True)
-    in_features = model.classifier[0].in_features
+    # model = getattr(models, arch)(pretrained=True)
+    dic = {"vgg19": 25088,
+           "densenet121": 1024,
+           "alexnet": 9216
+          }
+    
+    if arch == 'vgg19':
+        model = models.vgg19(pretrained=True)
+    elif arch == 'densenet121':
+        model = models.densenet121(pretrained=True)
+    elif arch == 'alexnet':
+        model = models.alexnet(pretrained = True)
+    else:
+        print("Im sorry but {} is not a valid model. Did you mean vgg19, densenet121, or alexnet?".format(arch))
+        sys.exit()
+
+    #in_features = model._modules["classifier"][0].in_features
+    print(model._modules["classifier"])
     
     #Freeze feature parameters so as not to backpropagate through them
     for param in model.parameters():
@@ -58,7 +69,7 @@ def create_model(arch='vgg19',hidden_units=5120,learning_rate=0.001):
     
     # Build classifier for model
     classifier = nn.Sequential(OrderedDict([
-                           ('fc1',nn.Linear(in_features,hidden_units)),
+                           ('fc1',nn.Linear(dic[arch],hidden_units)),
                            ('ReLu1',nn.ReLU()),
                            ('Dropout1',nn.Dropout(p=0.25)),
                            ('fc2',nn.Linear(hidden_units,512)),
